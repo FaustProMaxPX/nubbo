@@ -1,9 +1,6 @@
 package icu.nubbo.ioc;
 
-import icu.nubbo.ioc.annotation.NubboAutowired;
-import icu.nubbo.ioc.annotation.NubboBean;
-import icu.nubbo.ioc.annotation.NubboComponent;
-import icu.nubbo.ioc.annotation.NubboConfiguration;
+import icu.nubbo.ioc.annotation.*;
 import icu.nubbo.ioc.common.BeanInitInfo;
 import icu.nubbo.ioc.common.MethodInitInfo;
 import icu.nubbo.ioc.common.enums.InitWay;
@@ -24,10 +21,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-// Nubbo IOC容器，饿汉单例
+// Nubbo IOC容器，懒汉单例
 public class NubboContainer {
 
-    private static final NubboContainer container = new NubboContainer();
+    private static NubboContainer container;
 
     // 类型名与实例的映射
     private Map<String, Object> beans = new HashMap<>();
@@ -35,10 +32,26 @@ public class NubboContainer {
     private Map<Class<?>, BeanInitInfo> beanInitInfos = new HashMap<>();
 
     // 要扫描的包路径
-    private String[] packages;
+    private String[] packages = new String[]{""};
 
     public static NubboContainer getContainer() {
         return container;
+    }
+
+    // 同步锁保持线程安全
+    public synchronized static void run(Class<?> runClass) {
+        String[] basePackages = getBasePackages(runClass);
+        container = new NubboContainer(basePackages);
+    }
+
+    // 获取要扫描的包
+    // 默认扫描整个项目
+    private static String[] getBasePackages(Class<?> runClass) {
+        NubboComponentScan annotation = runClass.getAnnotation(NubboComponentScan.class);
+        if (annotation != null) {
+            return annotation.basePackages();
+        }
+        return new String[]{""};
     }
 
     public <T> T getBean(Class<T> clazz) {
@@ -50,10 +63,8 @@ public class NubboContainer {
     }
 
     // 容器初始化加载
-    private NubboContainer() {
-        // 默认扫描整个项目
-        // TODO: 支持自定义扫描范围
-        packages = new String[]{""};
+    private NubboContainer(String[] pkgs) {
+        this.packages = pkgs;
         for (String pkg : packages) {
             Set<Class<?>> componentClasses = getAnnotationClasses(pkg, NubboComponent.class);
             Set<Class<?>> configClasses = getAnnotationClasses(pkg, NubboConfiguration.class);
@@ -78,6 +89,8 @@ public class NubboContainer {
         } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+        // 初始化完成，清理不必要的数据
+        beanInitInfos = null;
     }
 
     private void checkSameNameClasses(Set<Class<?>> set1, Set<Class<?>> set2) {
