@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>dubbo-rpc</artifactId>
+    <artifactId>nubbo-rpc</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>dubbo-rpc-common</module>
+        <module>nubbo-rpc-common</module>
     </modules>
 
     <properties>
