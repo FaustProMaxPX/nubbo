@@ -1,4 +1,4 @@
-package icu.nubbo.utils;
+package icu.nubbo.ioc.utils;
 
 import java.util.*;
 

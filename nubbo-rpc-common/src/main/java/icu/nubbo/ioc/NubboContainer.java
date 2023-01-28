@@ -7,7 +7,7 @@ import icu.nubbo.ioc.common.enums.InitWay;
 import icu.nubbo.ioc.exception.CircularDependence;
 import icu.nubbo.ioc.exception.DuplicateClassesException;
 import icu.nubbo.ioc.exception.LackDependencyException;
-import icu.nubbo.utils.GraphUtil;
+import icu.nubbo.ioc.utils.GraphUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -134,6 +134,7 @@ public class NubboContainer {
         if (initInfo == null || beanInitInfos == null || beanInitInfos.size() == 0) {
             throw new IllegalArgumentException("初始化bean参数不足");
         }
+        // 这个方法的入参必然是具体的实现类，因此可以放心的直接初始化
         Class<?> clazz = initInfo.getClazz();
         switch (initInfo.getWay()) {
             case CONSTRUCTOR -> {
@@ -168,8 +169,14 @@ public class NubboContainer {
     }
 
     private Object getOrCreateBean(Class<?> clazz) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        // 从容器中直接获取需要的实例
+        // 首先判断是否是接口，如果是接口，先寻找实现类
+        if (clazz.isInterface()) {
+            clazz = getImplClass(clazz);
+        }
         Object ex = beans.get(clazz.getName());
         if (ex == null) {
+            // 若能直接找到初始化目标，则直接对他初始化
             BeanInitInfo initInfo = beanInitInfos.get(clazz);
             if (initInfo == null) {
                 throw new IllegalArgumentException("缺少必要依赖 " + clazz);
@@ -181,6 +188,27 @@ public class NubboContainer {
             }
         }
         return ex;
+    }
+
+    // 通过接口类型获取他的实现类
+    private Class<?> getImplClass(Class<?> clazz) {
+        if (!clazz.isInterface()) {
+            throw new IllegalArgumentException("getImplClass需要接口类型参数");
+        }
+        // 获取实现类
+        List<Class<?>> impl = beanInitInfos.keySet().stream()
+                .filter(c -> {
+                    for (Class<?> in : c.getInterfaces()) {
+                        if (in.equals(clazz)) return true;
+                    }
+                    return false;
+                }).toList();
+        if (impl.size() == 0) {
+            throw new LackDependencyException("缺少依赖：" + clazz);
+        } else if (impl.size() > 1) {
+            throw new DuplicateClassesException("存在多个 " + clazz + "的实现类，无法注入");
+        }
+        return impl.get(0);
     }
 
     private void checkDependency() {
