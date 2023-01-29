@@ -36,6 +36,18 @@ public class ZookeeperRegistry extends AbstractRegistryService {
     }
 
     @Override
+    public void unregisterAllService() {
+        for (String path : pathList) {
+            try {
+                curatorClient.deletePath(path);
+            } catch (Exception e) {
+                log.error("删除路径失败，错误参数: {}", path);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
     protected void register(NubboProtocol protocol) {
         String proJson = protocol.toJson();
         byte[] data = proJson.getBytes();

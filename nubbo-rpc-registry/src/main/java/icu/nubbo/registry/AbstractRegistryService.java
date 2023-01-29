@@ -46,6 +46,12 @@ public abstract class AbstractRegistryService {
     }
 
     /**
+     * 删除所有注册的服务
+     * 由子类实现
+     * */
+    public abstract void unregisterAllService();
+
+    /**
      * 服务注册
      * @param protocol 服务注册协议
      * */
