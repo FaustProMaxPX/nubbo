@@ -1,5 +1,7 @@
 package icu.nubbo.protocol;
 
+import com.alibaba.fastjson2.JSON;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -20,6 +22,10 @@ public class NubboProtocol implements Serializable {
         this.host = host;
         this.port = port;
         this.serviceInfoList = serviceInfoList;
+    }
+
+    public String toJson() {
+        return JSON.toJSONString(this);
     }
 
     public String getHost() {
@@ -57,5 +63,17 @@ public class NubboProtocol implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(host, port, serviceInfoList.hashCode());
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("host: ").append(host).append('\n');
+        builder.append("port: ").append(port).append('\n');
+        builder.append("serviceInfoList: ").append('\n');
+        for (ServiceInfo serviceInfo : serviceInfoList) {
+            builder.append('\t').append(serviceInfo).append('\n');
+        }
+        return builder.toString();
     }
 }
