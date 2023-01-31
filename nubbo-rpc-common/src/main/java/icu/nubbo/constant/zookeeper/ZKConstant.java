@@ -1,6 +1,7 @@
-package icu.nubbo.zookeeper.constant;
+package icu.nubbo.constant.zookeeper;
 
-public interface Constant {
+public interface ZKConstant {
+
     // 注册中心默认根路径
     String ZK_NAMESPACE = "nubbo";
     // 会话超时默认值

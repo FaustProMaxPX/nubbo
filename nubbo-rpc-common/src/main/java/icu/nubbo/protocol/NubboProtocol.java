@@ -52,6 +52,10 @@ public class NubboProtocol implements Serializable {
         this.serviceInfoList = serviceInfoList;
     }
 
+    public static NubboProtocol fromJson(String json) {
+        return JSON.parseObject(json, NubboProtocol.class);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -12,6 +12,7 @@
         <module>nubbo-rpc-common</module>
         <module>nubbo-rpc-registry</module>
         <module>nubbo-rpc-test</module>
+        <module>nubbo-rpc-discovery</module>
     </modules>
 
     <properties>
@@ -26,18 +27,6 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-core</artifactId>
             <version>5.8.11</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.curator</groupId>
-            <artifactId>curator-framework</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.curator</groupId>
-            <artifactId>curator-recipes</artifactId>
-            <version>4.3.0</version>
         </dependency>
 
         <dependency>
