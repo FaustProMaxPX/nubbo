@@ -1,8 +1,8 @@
 package icu.nubbo.zookeeper;
 
+import icu.nubbo.constant.zookeeper.ZKConstant;
 import icu.nubbo.protocol.NubboProtocol;
 import icu.nubbo.registry.AbstractRegistryService;
-import icu.nubbo.zookeeper.constant.Constant;
 import org.apache.curator.framework.state.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,11 +36,23 @@ public class ZookeeperRegistry extends AbstractRegistryService {
     }
 
     @Override
+    public void unregisterAllService() {
+        for (String path : pathList) {
+            try {
+                curatorClient.deletePath(path);
+            } catch (Exception e) {
+                log.error("删除路径失败，错误参数: {}", path);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
     protected void register(NubboProtocol protocol) {
         String proJson = protocol.toJson();
         byte[] data = proJson.getBytes();
         // TODO: 这种注册结构的问题在于无法快速修改指定服务，后面可以考虑更改结构
-        String path = Constant.ZK_DATA_PATH + "-" + proJson.hashCode();
+        String path = ZKConstant.ZK_DATA_PATH + "-" + proJson.hashCode();
         try {
             curatorClient.createPathData(path, data);
             pathList.add(path);
