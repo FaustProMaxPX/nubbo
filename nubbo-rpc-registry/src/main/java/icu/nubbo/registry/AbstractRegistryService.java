@@ -26,7 +26,7 @@ public abstract class AbstractRegistryService {
             log.debug("主机名为空");
             throw new IllegalArgumentException("主机名不可为空");
         }
-        if (serviceList == null || serviceList.size() == 0) {
+        if (serviceList == null || serviceList.isEmpty()) {
             log.debug("服务注册列表为空");
             return;
         }
