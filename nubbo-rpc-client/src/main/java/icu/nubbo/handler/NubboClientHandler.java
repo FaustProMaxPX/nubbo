@@ -27,6 +27,18 @@ public class NubboClientHandler extends SimpleChannelInboundHandler<NubboRespons
     private NubboProtocol rpcProtocol;
 
     @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        super.channelRegistered(ctx);
+        this.channel = ctx.channel();
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        super.channelActive(ctx);
+        this.remoteAddr = this.channel.remoteAddress();
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, NubboResponse response) throws Exception {
         String requestId = response.getRequestId();
         NubboFuture f = pendingRPC.get(requestId);

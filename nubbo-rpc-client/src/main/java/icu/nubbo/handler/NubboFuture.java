@@ -1,5 +1,6 @@
 package icu.nubbo.handler;
 
+import icu.nubbo.NubboClient;
 import icu.nubbo.codec.NubboRequest;
 import icu.nubbo.codec.NubboResponse;
 import org.slf4j.Logger;
@@ -118,7 +119,14 @@ public class NubboFuture implements Future<Object> {
     }
 
     private void runCallback(AsyncRPCCallback callback) {
-//        执行回调
+        NubboResponse resp = this.response;
+        NubboClient.submit(() -> {
+            if (resp.isSuccess()) {
+                callback.success(resp.getResult());
+            } else {
+                callback.fail(new RuntimeException("响应返回异常", new Throwable(resp.getError())));
+            }
+        });
     }
 
     static class Sync extends AbstractQueuedSynchronizer {

@@ -1,5 +1,6 @@
 package icu.nubbo.connection;
 
+import icu.nubbo.route.NubboLoadBalance;
 import icu.nubbo.handler.NubboClientHandler;
 import icu.nubbo.handler.NubboClientInitializer;
 import icu.nubbo.protocol.NubboProtocol;
@@ -9,6 +10,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +47,9 @@ public class ConnectionManager {
 
     private long waitTimeout = 5000;
 
+//    TODO: 初始化为默认实现类
+    private NubboLoadBalance loadBalance;
+
 //    保证连接器运行状态的可见性
     private volatile boolean isRunning = true;
 
@@ -77,6 +82,27 @@ public class ConnectionManager {
             for (NubboProtocol protocol : protocolSet) {
                 removeAndCloseHandler(protocol);
             }
+        }
+    }
+
+    public void updateConnectedServer(NubboProtocol protocol, PathChildrenCacheEvent.Type type) {
+        if (protocol == null) {
+            return;
+        }
+        switch (type) {
+            case CHILD_ADDED -> {
+                if (!protocolSet.contains(protocol)) {
+                    connectServerNode(protocol);
+                }
+            }
+            case CHILD_UPDATED -> {
+                removeAndCloseHandler(protocol);
+                connectServerNode(protocol);
+            }
+            case CHILD_REMOVED -> {
+                removeAndCloseHandler(protocol);
+            }
+            default -> throw new IllegalArgumentException("未知的服务注册修改类型");
         }
     }
 
@@ -164,7 +190,12 @@ public class ConnectionManager {
                 log.error("等待可用服务的过程被中断");
             }
         }
-//        TODO: 负载均衡选择可用的处理器
-        return null;
+        NubboProtocol protocol = loadBalance.route(serviceKey, connectedServerNodes);
+        NubboClientHandler handler = connectedServerNodes.get(protocol);
+        if (handler != null) {
+            return handler;
+        } else {
+            throw new RuntimeException("无法获取到可用的RPC连接");
+        }
     }
 }
