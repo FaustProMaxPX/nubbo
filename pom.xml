@@ -12,7 +12,7 @@
         <module>nubbo-rpc-common</module>
         <module>nubbo-rpc-registry</module>
         <module>nubbo-rpc-test</module>
-        <module>nubbo-rpc-discovery</module>
+        <module>nubbo-rpc-client</module>
     </modules>
 
     <properties>

@@ -76,4 +76,8 @@ public class CuratorClient {
         cache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
         cache.getListenable().addListener(listener);
     }
+
+    public void stop() {
+        curatorFramework.close();
+    }
 }

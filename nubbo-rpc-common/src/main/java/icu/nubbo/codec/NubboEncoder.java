@@ -12,9 +12,9 @@ public class NubboEncoder extends MessageToByteEncoder {
 
     private static final Logger log = LoggerFactory.getLogger(NubboEncoder.class);
 
-    private Class<?> genericClass;
+    private final Class<?> genericClass;
 
-    private Serializer serializer;
+    private final Serializer serializer;
 
     public NubboEncoder(Class<?> genericClass, Serializer serializer) {
         this.genericClass = genericClass;

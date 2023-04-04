@@ -13,9 +13,9 @@ public class NubboDecoder extends ByteToMessageDecoder {
 
     private static final Logger log = LoggerFactory.getLogger(NubboEncoder.class);
 
-    private Class<?> genericClass;
+    private final Class<?> genericClass;
 
-    private Serializer serializer;
+    private final Serializer serializer;
 
     public NubboDecoder(Class<?> genericClass, Serializer serializer) {
         this.genericClass = genericClass;

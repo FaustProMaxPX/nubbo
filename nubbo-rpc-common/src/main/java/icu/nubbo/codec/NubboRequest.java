@@ -71,7 +71,7 @@ public class NubboRequest implements Serializable {
     }
 
     public static class RequestBuilder {
-        private NubboRequest request;
+        private final NubboRequest request;
 
         public RequestBuilder() {
             request = new NubboRequest();

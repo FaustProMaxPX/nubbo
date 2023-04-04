@@ -1,5 +1,6 @@
 package icu.nubbo.discovery.zookeeper;
 
+import icu.nubbo.connection.ConnectionManager;
 import icu.nubbo.constant.zookeeper.ZKConstant;
 import icu.nubbo.discovery.Discovery;
 import icu.nubbo.protocol.NubboProtocol;
@@ -64,7 +65,7 @@ public class ZookeeperDiscovery implements Discovery {
     }
 
     private void updateConnectedServer(NubboProtocol protocol, PathChildrenCacheEvent.Type type) {
-        // TODO：更新连接管理器中的相关数据
+        ConnectionManager.getInstance().updateConnectedServer(protocol, type);
     }
 
     private void getServiceAndUpdate() throws Exception {
@@ -76,12 +77,16 @@ public class ZookeeperDiscovery implements Discovery {
             String json = new String(data);
             NubboProtocol protocol = NubboProtocol.fromJson(json);
             dataList.add(protocol);
-            // 更新存储的服务元数据
-            updateConnectedServer(dataList);
         }
+        // 更新存储的服务元数据
+        updateConnectedServer(dataList);
     }
 
     private void updateConnectedServer(List<NubboProtocol> dataList) {
-        // TODO: 更新存储的服务元数据
+        ConnectionManager.getInstance().updateConnectedServer(dataList);
+    }
+
+    public void stop() {
+        curatorClient.stop();
     }
 }

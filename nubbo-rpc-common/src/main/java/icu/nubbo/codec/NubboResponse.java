@@ -19,7 +19,7 @@ public class NubboResponse implements Serializable {
     private Object result;
 
     public boolean isSuccess() {
-        return error != null;
+        return error == null;
     }
 
     public Integer getCode() {
