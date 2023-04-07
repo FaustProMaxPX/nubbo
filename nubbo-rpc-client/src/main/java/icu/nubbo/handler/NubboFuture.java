@@ -56,6 +56,7 @@ public class NubboFuture implements Future<Object> {
 
     @Override
     public Object get() throws InterruptedException, ExecutionException {
+//        尝试获取响应，如果还没有收到，就阻塞在这
         sync.acquire(1);
         if (response != null) {
             return response.getResult();
@@ -82,9 +83,13 @@ public class NubboFuture implements Future<Object> {
         }
     }
 
+    /*
+    * 收到响应后调用，释放同步器
+    * */
     public void done(NubboResponse response) {
         this.response = response;
         sync.release(1);
+//        收到响应后调用回调函数
         invokeCallbacks();
         long responseTime = System.currentTimeMillis() - startTime;
         if (responseTime > this.responseTimeThreshold) {
@@ -92,6 +97,9 @@ public class NubboFuture implements Future<Object> {
         }
     }
 
+    /*
+    * 调用所有的回调操作，期间用锁来保护，避免在执行期间回调列表被修改
+    * */
     private void invokeCallbacks() {
         lock.lock();
         try {
@@ -103,6 +111,10 @@ public class NubboFuture implements Future<Object> {
         }
     }
 
+    /*
+    * 添加回调函数，如果已经收到响应，直接执行回调，如果没有，加入回调列表
+    * 整个操作使用锁来保护，避免这个Future被多个线程操作
+    * */
     public NubboFuture addCallback(AsyncRPCCallback callback) {
 //        添加新的待执行任务，如果当前Future没有被其他线程操作，就尝试直接执行任务，否则加入等待队列
         lock.lock();
@@ -120,6 +132,7 @@ public class NubboFuture implements Future<Object> {
 
     private void runCallback(AsyncRPCCallback callback) {
         NubboResponse resp = this.response;
+//        用线程池调用回调操作
         NubboClient.submit(() -> {
             if (resp.isSuccess()) {
                 callback.success(resp.getResult());
@@ -129,6 +142,9 @@ public class NubboFuture implements Future<Object> {
         });
     }
 
+    /**
+     * 一个同步器，用于跟踪是否接收到RPC响应
+     * */
     static class Sync extends AbstractQueuedSynchronizer {
 
         private final int done = 1;

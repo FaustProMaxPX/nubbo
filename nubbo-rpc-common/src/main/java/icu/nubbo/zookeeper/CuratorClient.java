@@ -42,7 +42,7 @@ public class CuratorClient {
     public String createPathData(String path, byte[] data) throws Exception {
         return curatorFramework.create()
                 .creatingParentsIfNeeded()
-                .withMode(CreateMode.EPHEMERAL)
+                .withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
                 .forPath(path, data);
     }
 

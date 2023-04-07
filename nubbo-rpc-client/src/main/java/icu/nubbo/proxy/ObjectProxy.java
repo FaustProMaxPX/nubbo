@@ -28,6 +28,7 @@ public class ObjectProxy<T> implements InvocationHandler, NubboRpcService {
     @Override
     public NubboFuture call(String funcName, Object... args) {
         String serviceKey = ServiceUtil.makeServiceKey(this.clazz.getName(), this.version);
+//        根据服务的key去获取对应的处理器
         NubboClientHandler handler = ConnectionManager.getInstance().chooseHandler(serviceKey);
         NubboRequest request = createRequest(clazz.getName(), funcName, args);
 //        异步调用

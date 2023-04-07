@@ -75,6 +75,7 @@ public class ZookeeperDiscovery implements Discovery {
         for (String node : nodes) {
             byte[] data = curatorClient.getData(ZKConstant.ZK_PROVIDER_PATH + "/" + node);
             String json = new String(data);
+            log.info(json);
             NubboProtocol protocol = NubboProtocol.fromJson(json);
             dataList.add(protocol);
         }

@@ -4,6 +4,7 @@ import icu.nubbo.route.NubboLoadBalance;
 import icu.nubbo.handler.NubboClientHandler;
 import icu.nubbo.handler.NubboClientInitializer;
 import icu.nubbo.protocol.NubboProtocol;
+import icu.nubbo.route.impl.NubboLoadBalanceRoundRobin;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -47,8 +48,7 @@ public class ConnectionManager {
 
     private long waitTimeout = 5000;
 
-//    TODO: 初始化为默认实现类
-    private NubboLoadBalance loadBalance;
+    private NubboLoadBalance loadBalance = new NubboLoadBalanceRoundRobin();
 
 //    保证连接器运行状态的可见性
     private volatile boolean isRunning = true;
@@ -86,6 +86,7 @@ public class ConnectionManager {
     }
 
     public void updateConnectedServer(NubboProtocol protocol, PathChildrenCacheEvent.Type type) {
+//        根据zk中子节点的变化修改当前保存打连接
         if (protocol == null) {
             return;
         }
@@ -165,12 +166,14 @@ public class ConnectionManager {
         for (NubboProtocol nubboProtocol : protocolSet) {
             removeAndCloseHandler(nubboProtocol);
         }
+//        唤醒还在等待打线程，程序准备关闭了
         signalAvailableHandler();
         threadPoolExecutor.shutdown();
         eventLoopGroup.shutdownGracefully();
     }
 
     private boolean waitingForHandler() throws InterruptedException {
+//        TODO：这里上锁的操作不太理解
         lock.lock();
         try {
             log.warn("正在等待可用的服务");
@@ -180,8 +183,13 @@ public class ConnectionManager {
         }
     }
 
+    /**
+     * 根据serviceKey获取目标处理器
+     * @param serviceKey 服务对应的key，由服务名和版本号组成
+     * */
     public NubboClientHandler chooseHandler(String serviceKey) {
         int size = connectedServerNodes.values().size();
+//        如果没有可用的服务，就进入等待状态
         while (isRunning && size == 0) {
             try {
                 waitingForHandler();
@@ -190,12 +198,18 @@ public class ConnectionManager {
                 log.error("等待可用服务的过程被中断");
             }
         }
+//        通过负载均衡找到合适的实例
         NubboProtocol protocol = loadBalance.route(serviceKey, connectedServerNodes);
+//        获取该实例对应的处理器
         NubboClientHandler handler = connectedServerNodes.get(protocol);
         if (handler != null) {
             return handler;
         } else {
             throw new RuntimeException("无法获取到可用的RPC连接");
         }
+    }
+
+    public void setLoadBalance(NubboLoadBalance loadBalance) {
+        this.loadBalance = loadBalance;
     }
 }
