@@ -18,6 +18,7 @@ public class NubboClientHandler extends SimpleChannelInboundHandler<NubboRespons
 
     private static final Logger log = LoggerFactory.getLogger(NubboClientHandler.class);
 
+//    这个处理器可能正在执行好几个RPC请求，因此用一个线程安全的map存储
     private ConcurrentHashMap<String, NubboFuture> pendingRPC = new ConcurrentHashMap<>();
 
     private volatile Channel channel;
@@ -40,6 +41,7 @@ public class NubboClientHandler extends SimpleChannelInboundHandler<NubboRespons
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, NubboResponse response) throws Exception {
+//        接收请求响应
         String requestId = response.getRequestId();
         NubboFuture f = pendingRPC.get(requestId);
         if (f != null) {
@@ -64,6 +66,7 @@ public class NubboClientHandler extends SimpleChannelInboundHandler<NubboRespons
         NubboFuture f = new NubboFuture(request);
         pendingRPC.put(request.getRequestId(), f);
         try {
+//            将请求写入channel
             ChannelFuture channelFuture = channel.writeAndFlush(request).sync();
             if (!channelFuture.isSuccess()) {
                 log.error("send request failed, request id: {}", request.getRequestId());
